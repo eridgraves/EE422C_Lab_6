@@ -21,7 +21,9 @@ public class Theater {
     public String nowShowing; // Name of the movie
 
     // Create a map to hold all the seats in the Theater, if they have been sold, BXID, and CustID
-    public static Map<String, String> seatMap;  // <Seat.toString(), ""> if unsold
+    public static ArrayList<Seat> seatMap;
+
+    //public static Map<String, String> seatMap;  // <Seat.toString(), ""> if unsold
                                                 // <Seat.toString(), "BXID-CustID"> if sold
     // Easier to populate the map with empty seats at initialization, because they are not stored in order. Search for best seat by iteration over the entire theater and looking for unassigned seats rather than using containsKey().
 
@@ -48,12 +50,14 @@ public class Theater {
     static class Seat {
         private int rowNum;
         private int seatNum;
+        private String data; // "BXID-CustID" if sold,  "UNASSIGNED" if unsold
 
         //TODO: give Seat information about owners?
 
         public Seat(int rowNum, int seatNum) {
             this.rowNum = rowNum;
             this.seatNum = seatNum;
+            this.data = "";
         }
 
         public int getSeatNum() {
@@ -63,6 +67,8 @@ public class Theater {
         public int getRowNum() {
             return rowNum;
         }
+
+        public String getData() { return data;}
 
         @Override
         public String toString() {
@@ -77,14 +83,14 @@ public class Theater {
             return result;
         }
 
-        // Reurns the seat (from seatMap) at a certain position as a String
-        public static String findSeatString(int row, int sn){
-
-            Seat tmpSeat = new Seat(row, sn);
-            String tmpSeatStr = tmpSeat.toString();
-
-            return tmpSeatStr;
-        }
+//        // Reurns the seat (from seatMap) at a certain position as a String
+//        public static String findSeatString(int row, int sn){
+//
+//            //Seat tmpSeat = new Seat(row, sn);
+//            //String tmpSeatStr = tmpSeat.toString();
+//
+//            return tmpSeatStr;
+//        }
 
 
         /**
@@ -116,6 +122,11 @@ public class Theater {
             }else{ // s1 row == s2 row AND s2 seatNum < s1 seatNum
                 return -1;
             }
+        }
+
+        public void setData(String dataString) {
+
+            this.data = dataString;
         }
     }
 
@@ -207,28 +218,53 @@ public class Theater {
             System.out.println("Created Theater with rows:" + rowsInside + " seats:" + seatsInRow);
         }
 
-        // TODO: Implement this constructor. Anything else?
+        // Populate ArrayList of Seats
+        //-- Seats will be in order from best to worst
 
-        // Populate map of seats --> mark all as empty
-        seatMap = new HashMap<String, String>(){
+        seatMap = new ArrayList<Seat>(){
             {
                 // For each row starting from the front
-                for(int row = 0; row < rowsInside; row++) { // TODO: rows start at 0?
+                for(int row = 0; row < rowsInside; row++)
 
                     // For each seat starting from the left (0)
-                    for (int sn = 0; sn < seatsInRow; sn++) {  // TODO: seats start at 0?
+                    for (int sn = 0; sn < seatsInRow; sn++) {
 
-                        Seat s = new Seat(row, sn);
-                        put(s.toString(), "UNASSIGNED"); // Dont initialize as empty because HashMap.get() returns null if no key exists
-                        // Not seatMap.put() because it isnt instantiated yet --> just use put()
+                        // Create a new seat object that is unassigned
+                        Seat currentSeat = new Seat(row, sn);
+                        currentSeat.setData("UNASSIGNED");
+
+                        // Add Seat to the seatMap
+                        add(currentSeat);
 
                         if(BookingClient.DEBUG){
                             System.out.println("Created Seat at: r:" + row + " c:" + sn);
                         }
                     }
-                }
             }
-        }; // Initialize via anonymous class
+        };
+
+        // TODO: Implement this constructor. Anything else?
+
+        // Populate map of seats --> mark all as empty
+//        seatMap = new HashMap<String, String>(){
+//            {
+//                // For each row starting from the front
+//                for(int row = 0; row < rowsInside; row++) { // TODO: rows start at 0?
+//
+//                    // For each seat starting from the left (0)
+//                    for (int sn = 0; sn < seatsInRow; sn++) {  // TODO: seats start at 0?
+//
+//                        Seat s = new Seat(row, sn);
+//                        put(s.toString(), "UNASSIGNED"); // Dont initialize as empty because HashMap.get() returns null if no key exists
+//                        // Not seatMap.put() because it isnt instantiated yet --> just use put()
+//
+//                        if(BookingClient.DEBUG){
+//                            System.out.println("Created Seat at: r:" + row + " c:" + sn);
+//                        }
+//                    }
+//                }
+//            }
+//        }; // Initialize via anonymous class
 
     }
 
@@ -245,16 +281,15 @@ public class Theater {
             // For each seat starting from the left (0)
             for (int sn = 0; sn < seatsInRow; sn++) {  // TODO: seats start at 0?
 
-                // TODO: instead of HashMap, use sorted array, such that seats in the array are ordered best to worst?
+                Seat currentSeat = seatMap.get(row*seatsInRow + sn); // check this math
 
-                // if the current seat is availible, return it
-                Seat currentSeat = new Seat(row, sn);
+                // if the current seat is available, return it
+                if (currentSeat.getData().equals("UNASSIGNED") ) { // TODO: is this the best structure? --> can we iterate through the seats in order?
+                    if(BookingClient.DEBUG){
+                            System.out.println("Available Seat at: r:" + row + " c:" + sn);
+                    }
 
-                if (seatMap.get(currentSeat.toString().) { // TODO: is this the best structure?
-
-                } else{
-
-                    return new Seat(row, sn); // TODO: is it okay to create a duplicate Seat to use in searching?
+                    return currentSeat;
                 }
             }
         }
