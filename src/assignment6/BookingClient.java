@@ -18,15 +18,20 @@ import java.lang.Thread;
 public class BookingClient {
 
     public static boolean DEBUG = true;
+    public static Theater theater;
+
+    public static Map<String, Integer> boMap;
 
     /**
      * @param office  maps box office id to number of customers in line
-     * @param theater the theater where the show is playing
+     * @param th the theater where the show is playing
      */
-    public BookingClient(Map<String, Integer> office, Theater theater) {
+    public BookingClient(Map<String, Integer> office, Theater th) {
 
         //TODO: what goes here? Does it need a private copy of the map to be used during simulate()?
+        boMap = new HashMap<String, Integer>(office);
 
+        theater = th;
 
 
     }
@@ -43,13 +48,16 @@ public class BookingClient {
         List<Thread> threadList = new ArrayList<>();
 
         // For each entry in Map
-
+        for(String bxID : boMap.keySet()) {
             // Start a new thread and assign it to that box office (via BXID)
-            clientThread t = new clientThread();
+            clientThread t = new clientThread(bxID, boMap.get(bxID), theater);
 
             // Add the thread to a list
             threadList.add(t);
 
+            // Start the Thread
+            t.start();
+        }
         // Return the list of threads
         return threadList;
     }
@@ -78,9 +86,11 @@ public class BookingClient {
         // Make a Theater
         Theater th = new Theater(4,4,"SHOW_NAME"); // 16 seats
 
+        th.bestAvailableSeat();
         // Create a new BookingClient Object
-        BookingClient bC = new BookingClient(officeMap, th);
+        BookingClient bClient = new BookingClient(officeMap, th);
 
+        bClient.simulate();
 
 
 

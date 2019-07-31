@@ -3,13 +3,14 @@ package assignment6;
 import java.util.ArrayList;
 import java.util.List;
 
-public class clientThread implements Runnable {
+public class clientThread extends Thread {
 
     Thread cThread;
     private int numCustomers;
     private String BXID;
+    private Theater theater;
 
-    clientThread(String id, int nc) {
+    clientThread(String id, int nc, Theater th) {
 
         // Set the Box Office ID for this thread
         BXID = id;
@@ -17,61 +18,60 @@ public class clientThread implements Runnable {
         // And the number of customers in line
         numCustomers = nc;
 
+        // Store the Theater this is acting on
+        theater = th;
+
     }
 
     @Override
-    public void run() {
+    public void run() { //TODO: Change the structure here
 
-        // While there are seats availible in the theater --> Theater.bestSeatAvailable != null
+        // While there are still people in line
+        for (int currentCustomer = 1; currentCustomer <= numCustomers; currentCustomer++) {
 
-        // Book the best seat
+            synchronized (Theater.syncLog) { // TODO: need to restructure on one synchronized structure
+                if (BookingClient.DEBUG) {
+                    System.out.println("Thread " + BXID + " has control.");
+                }
 
-        // Mark it as taken
+                // if there are no available seats: exit
+                if (theater.bestAvailableSeat() == null) {
 
-        // Let other threads have a turn --> synchronize on seatMap or syncLog?
+                    if (BookingClient.DEBUG) {
+                        System.out.println("No more seats available: " + BXID);
+                    }
+                    break;
 
+                } else {
 
-//        while(CountMain.list.size() < 100) {
-//
-//            // old version
-//            //synchronized (CountMain.list) {
-//            CountMain.lock.lock();
-//
-//            System.out.print("Thread " + threadName + " running: ");
-//
-//            if(CountMain.list.size() < 100) {
-//
-//
-//                CountMain.list.add(threadName);
-//                System.out.println(CountMain.list.toString());
-//
-//                // Force threads to run in order?
-//            }
-//            try{
-//                CountMain.list.wait();//Thread.sleep(50); // Sleep to give other threads that havent gone a chance to go
-//            }catch (InterruptedException e){
-//                Thread.currentThread().interrupt();
-//
-//            }
-//            CountMain.lock.unlock();
-//            CountMain.list.notify();
-//            //}
-//
-//
-////            Thread.yield();
-//
-//
-//        }
-//
-//        // does putting this here mean that it runs after the synchronized block finishes?
-//        if(CountMain.list.size() >= 10)
-//            System.out.println("Thread " + threadName + " finished");
+                    Theater.Seat bestSeat = theater.bestAvailableSeat();
 
+                    // Book the best seat
+                    bestSeat.setBXID(BXID);
+                    bestSeat.setCID(currentCustomer);
+
+                    // Mark it as taken
+                    Theater.seatMap.add(bestSeat.getRowNum() * theater.getSeatsInRow() + bestSeat.getSeatNum(), bestSeat);
+
+                    if (BookingClient.DEBUG) {
+                        System.out.println("Seat Added: " + BXID + ":" + currentCustomer + " - " + bestSeat.toString());
+                    }
+
+                    // Let other threads have a turn --> synchronize on seatMap or syncLog?
+                    try {
+                        Thread.yield();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+        }
     }
 
     public void start() {
 
-        if(BookingClient.DEBUG) {
+        if (BookingClient.DEBUG) {
             System.out.println("Thread started for: " + BXID);
         }
 

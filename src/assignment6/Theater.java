@@ -42,6 +42,10 @@ public class Theater {
         return printDelay;
     }
 
+    public int getSeatsInRow() {
+        return seatsInRow;
+    }
+
     // ArrayList of each seat in the theater. Concurrently modified by each BoxOffice thread as tickets are purchased. When full, all seats have been sold.
     public ArrayList<Ticket> seatTickets = new ArrayList<>(); // TODO : didnt see this at first???
 
@@ -242,6 +246,9 @@ public class Theater {
         if (BookingClient.DEBUG) {
             System.out.println("Created Theater with rows:" + rowsInside + " seats:" + seatsInRow);
         }
+
+        // Set up salesLog to avoid nullpointer
+        salesLog = new ArrayList<Seat>();
 
         // Set up logging in synchronized list
         syncLog = Collections.synchronizedList(salesLog);
