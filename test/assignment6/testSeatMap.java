@@ -1,10 +1,6 @@
 package assignment6;
 
-import assignment6.Theater;
 import org.junit.Test;
-
-import java.util.Iterator;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -21,7 +17,7 @@ public class testSeatMap {
 
         for(Theater.Seat s : Theater.seatMap){
              //All seats should be unassigned
-            assertEquals("UNASSIGNED", s.getData());
+            assertEquals("UNASSIGNED", s.getBXID());
         }
 
         // Make sure that they are all initialized properly

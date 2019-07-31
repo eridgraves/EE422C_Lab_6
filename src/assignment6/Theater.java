@@ -1,6 +1,6 @@
 /* MULTITHREADING <Theater.java>
  * EE422C Project 6 submission by
- * Replace <...> with your actual data.
+ * Replace <...> with your actual BXID.
  * Eric Graves
  * edg732
  * Slip days used: <0>
@@ -9,9 +9,9 @@
 package assignment6;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 public class Theater {
 
@@ -21,11 +21,13 @@ public class Theater {
     public String nowShowing; // Name of the movie
 
     // Create a map to hold all the seats in the Theater, if they have been sold, BXID, and CustID
-    public static ArrayList<Seat> seatMap;
+    public static ArrayList<Seat> seatMap; //TODO: should this be static?
 
-    //public static Map<String, String> seatMap;  // <Seat.toString(), ""> if unsold
-                                                // <Seat.toString(), "BXID-CustID"> if sold
-    // Easier to populate the map with empty seats at initialization, because they are not stored in order. Search for best seat by iteration over the entire theater and looking for unassigned seats rather than using containsKey().
+
+    // Create a FIFO data structure to use as a log of transactions
+    // To have multiple threads change the structure of this list concurrently, it must be synchronized on a wrapper object or, wrapped in Collections.synchronizedList
+    public static List<Seat> salesLog;
+    public static List<Seat> syncLog; // Individual threads add sold seats to this shared list
 
     /**
      * the delay time you will use when print tickets
@@ -41,7 +43,7 @@ public class Theater {
     }
 
     // ArrayList of each seat in the theater. Concurrently modified by each BoxOffice thread as tickets are purchased. When full, all seats have been sold.
-    public ArrayList<Ticket> seatTickets = new ArrayList<>();
+    public ArrayList<Ticket> seatTickets = new ArrayList<>(); // TODO : didnt see this at first???
 
     /**
      * Represents a seat in the theater
@@ -50,14 +52,18 @@ public class Theater {
     static class Seat {
         private int rowNum;
         private int seatNum;
-        private String data; // "BXID-CustID" if sold,  "UNASSIGNED" if unsold
 
-        //TODO: give Seat information about owners?
+        // Box office that sold the ticket for this seat
+        private String BXID; // "BXID" if sold,  "UNASSIGNED" if unsold
+        // Customer ID that purchased this seat
+        private int CID; // int CID if sold,  -1 if unsold
+
 
         public Seat(int rowNum, int seatNum) {
             this.rowNum = rowNum;
             this.seatNum = seatNum;
-            this.data = "";
+            this.BXID = "";
+            this.CID = -1;
         }
 
         public int getSeatNum() {
@@ -68,7 +74,13 @@ public class Theater {
             return rowNum;
         }
 
-        public String getData() { return data;}
+        public String getBXID() {
+            return BXID;
+        }
+
+        public int getCID() {
+            return CID;
+        }
 
         @Override
         public String toString() {
@@ -83,15 +95,6 @@ public class Theater {
             return result;
         }
 
-//        // Reurns the seat (from seatMap) at a certain position as a String
-//        public static String findSeatString(int row, int sn){
-//
-//            //Seat tmpSeat = new Seat(row, sn);
-//            //String tmpSeatStr = tmpSeat.toString();
-//
-//            return tmpSeatStr;
-//        }
-
 
         /**
          * Compare two theater seats.
@@ -99,34 +102,49 @@ public class Theater {
          * @param s1 first seat
          * @param s2 second seat
          * @return 0 iff s1 == s2
-         *        -1 iff s1 < s2 (s1 worse than s2)
-         *         1 iff s1 > s2 (s1 better than s2)
+         * -1 iff s1 < s2 (s1 worse than s2)
+         * 1 iff s1 > s2 (s1 better than s2)
          */
-        public static int compare(Seat s1, Seat s2){
+        public static int compare(Seat s1, Seat s2) {
 
             // Exactly equal
-            if((s1.getRowNum() == s2.getRowNum()) && (s1.getSeatNum() == s2.getSeatNum())){
+            if ((s1.getRowNum() == s2.getRowNum()) && (s1.getSeatNum() == s2.getSeatNum())) {
                 return 0;
             }
 
             // Seats are not exactly equal: compare rows first
-            if(s1.getRowNum() < s2.getRowNum()){
+            if (s1.getRowNum() < s2.getRowNum()) {
                 return 1; // closer seats are better
-            }else if(s1.getRowNum() > s2.getRowNum()){
+            } else if (s1.getRowNum() > s2.getRowNum()) {
                 return -1; // further seats are worse
             }
 
             // Gets here if rows are equal, but seat numbers are different
-            if(s1.getSeatNum() < s2.getSeatNum()){
+            if (s1.getSeatNum() < s2.getSeatNum()) {
                 return 1;
-            }else{ // s1 row == s2 row AND s2 seatNum < s1 seatNum
+            } else { // s1 row == s2 row AND s2 seatNum < s1 seatNum
                 return -1;
             }
         }
 
-        public void setData(String dataString) {
+        /**
+         * Set Box Office ID for this seat.
+         *
+         * @param dataString: BXID
+         */
+        public void setBXID(String dataString) {
 
-            this.data = dataString;
+            this.BXID = dataString;
+        }
+
+        /**
+         * Set Customer ID for this seat
+         *
+         * @param data: CID as int
+         */
+        public void setCID(int data) {
+
+            this.CID = data;
         }
     }
 
@@ -207,6 +225,13 @@ public class Theater {
         }
     }
 
+    /**
+     * Theater Constructor
+     *
+     * @param numRows: Number of rows in the Theater (int)
+     * @param seatsPerRow: Number of seats in each row (int)
+     * @param show: Name of the movie (String)
+     */
     public Theater(int numRows, int seatsPerRow, String show) {
 
         // Save the Theater size and movie at creation
@@ -214,57 +239,38 @@ public class Theater {
         this.seatsInRow = seatsPerRow;
         this.nowShowing = show;
 
-        if(BookingClient.DEBUG){
+        if (BookingClient.DEBUG) {
             System.out.println("Created Theater with rows:" + rowsInside + " seats:" + seatsInRow);
         }
 
-        // Populate ArrayList of Seats
-        //-- Seats will be in order from best to worst
+        // Set up logging in synchronized list
+        syncLog = Collections.synchronizedList(salesLog);
 
-        seatMap = new ArrayList<Seat>(){
+        // Populate ArrayList of Seats at Theater Initialization
+        //-- Seats will be in order from best to worst
+        //-- All seats start as UNASSIGNED
+        seatMap = new ArrayList<Seat>() {
             {
                 // For each row starting from the front
-                for(int row = 0; row < rowsInside; row++)
+                for (int row = 0; row < rowsInside; row++)
 
                     // For each seat starting from the left (0)
                     for (int sn = 0; sn < seatsInRow; sn++) {
 
                         // Create a new seat object that is unassigned
                         Seat currentSeat = new Seat(row, sn);
-                        currentSeat.setData("UNASSIGNED");
+                        currentSeat.setBXID("UNASSIGNED");
+                        currentSeat.setCID(-1);
 
                         // Add Seat to the seatMap
                         add(currentSeat);
 
-                        if(BookingClient.DEBUG){
+                        if (BookingClient.DEBUG) {
                             System.out.println("Created Seat at: r:" + row + " c:" + sn);
                         }
                     }
             }
         };
-
-        // TODO: Implement this constructor. Anything else?
-
-        // Populate map of seats --> mark all as empty
-//        seatMap = new HashMap<String, String>(){
-//            {
-//                // For each row starting from the front
-//                for(int row = 0; row < rowsInside; row++) { // TODO: rows start at 0?
-//
-//                    // For each seat starting from the left (0)
-//                    for (int sn = 0; sn < seatsInRow; sn++) {  // TODO: seats start at 0?
-//
-//                        Seat s = new Seat(row, sn);
-//                        put(s.toString(), "UNASSIGNED"); // Dont initialize as empty because HashMap.get() returns null if no key exists
-//                        // Not seatMap.put() because it isnt instantiated yet --> just use put()
-//
-//                        if(BookingClient.DEBUG){
-//                            System.out.println("Created Seat at: r:" + row + " c:" + sn);
-//                        }
-//                    }
-//                }
-//            }
-//        }; // Initialize via anonymous class
 
     }
 
@@ -276,17 +282,17 @@ public class Theater {
     public Seat bestAvailableSeat() {
 
         // For each row starting from the front
-        for(int row = 0; row < rowsInside; row++) { // TODO: rows start at 0?
+        for (int row = 0; row < rowsInside; row++) { // TODO: rows start at 0?
 
             // For each seat starting from the left (0)
             for (int sn = 0; sn < seatsInRow; sn++) {  // TODO: seats start at 0?
 
-                Seat currentSeat = seatMap.get(row*seatsInRow + sn); // check this math
+                Seat currentSeat = seatMap.get(row * seatsInRow + sn); // check this math
 
                 // if the current seat is available, return it
-                if (currentSeat.getData().equals("UNASSIGNED") ) { // TODO: is this the best structure? --> can we iterate through the seats in order?
-                    if(BookingClient.DEBUG){
-                            System.out.println("Available Seat at: r:" + row + " c:" + sn);
+                if (currentSeat.getBXID().equals("UNASSIGNED")) { // TODO: is this the best structure? --> can we iterate through the seats in order?
+                    if (BookingClient.DEBUG) {
+                        System.out.println("Available Seat at: r:" + row + " c:" + sn);
                     }
 
                     return currentSeat;
@@ -305,8 +311,30 @@ public class Theater {
      * @return a ticket or null if a box office failed to reserve the seat
      */
     public Ticket printTicket(String boxOfficeId, Seat seat, int client) {
-        // TODO: Implement this method
 
+        // Search all seats in the Theater
+        for (Seat s : seatMap) {
+            if (s.getSeatNum() == seat.getSeatNum() && s.getRowNum() == seat.getRowNum() && s.getBXID().equals(boxOfficeId) && s.getCID() == client) {
+
+                // Make the Ticket
+                Ticket tkt = new Ticket(nowShowing, s.getBXID(), s, s.getCID());
+
+                // Print Ticket to console
+                System.out.println(tkt.toString());
+
+                // Small delay (using printDelay)
+                //-- something with Thread.sleep(printDelay)
+                try {
+                    Thread.sleep(getPrintDelay());
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                // Return the Ticket
+                return tkt;
+            }
+        }
 
         return null;
     }
@@ -317,7 +345,25 @@ public class Theater {
      * @return list of tickets sold
      */
     public List<Ticket> getTransactionLog() {
-        // TODO: Implement this method
-        return null;
+
+        // Make an empty list for tickets
+        List<Ticket> ticketLog = new LinkedList<>();
+
+        // for each sold seat
+        for (Seat s : syncLog) {
+
+            if(BookingClient.DEBUG) {
+                System.out.println(s.toString());
+            }
+
+            // Get the ticket from that seat
+            Ticket tkt = new Ticket(nowShowing, s.getBXID(), s, s.getCID());
+
+            // Add it to the list
+            ticketLog.add(tkt);
+
+        }
+
+        return ticketLog;
     }
 }
