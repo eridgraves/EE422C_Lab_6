@@ -18,6 +18,8 @@ import java.lang.Thread;
 public class BookingClient {
 
     public static boolean DEBUG = true;
+    public static boolean DEBUG_VERBOSE = false; // only if you want to see every possible debug message
+
     public static Theater theater;
 
     public static Map<String, Integer> boMap;
@@ -43,7 +45,7 @@ public class BookingClient {
      * @return list of threads used in the simulation,
      * should have as many threads as there are box offices
      */
-    public List<Thread> simulate() {
+    public List<Thread> simulate(){
         // Create empty list of Threads
         List<Thread> threadList = new ArrayList<>();
 
@@ -57,6 +59,7 @@ public class BookingClient {
 
             // Start the Thread
             t.start();
+
         }
         // Return the list of threads
         return threadList;
@@ -86,12 +89,15 @@ public class BookingClient {
         // Make a Theater
         Theater th = new Theater(4,4,"SHOW_NAME"); // 16 seats
 
-        th.bestAvailableSeat();
         // Create a new BookingClient Object
         BookingClient bClient = new BookingClient(officeMap, th);
 
-        bClient.simulate();
+        List<Thread> tList = bClient.simulate();
 
+        if(DEBUG){
+            //System.out.println(tList);
+            //System.out.println(bClient.theater.theaterString());
+        }
 
 
     }

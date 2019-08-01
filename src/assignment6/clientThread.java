@@ -26,53 +26,60 @@ public class clientThread extends Thread {
     @Override
     public void run() { //TODO: Change the structure here
 
+        if (BookingClient.DEBUG && numCustomers < 1) {
+            System.out.println(BXID + ": No customers");
+        }
+
         // While there are still people in line
         for (int currentCustomer = 1; currentCustomer <= numCustomers; currentCustomer++) {
 
-            synchronized (Theater.syncLog) { // TODO: need to restructure on one synchronized structure
+            synchronized (Theater.seatMap) { // TODO: need to restructure on one synchronized structure
                 if (BookingClient.DEBUG) {
-                    System.out.println("Thread " + BXID + " has control.");
+                    System.out.println(BXID + ": (" + currentCustomer + "/" + numCustomers + ")");
                 }
 
+                Theater.Seat bestSeat = theater.bestAvailableSeat();
+
                 // if there are no available seats: exit
-                if (theater.bestAvailableSeat() == null) {
+                if (bestSeat == null) {
 
                     if (BookingClient.DEBUG) {
-                        System.out.println("No more seats available: " + BXID);
+                        System.out.println("-\tNo more seats available: " + BXID);
                     }
-                    break;
+                    break; // Thread will reach the end of run --> will not try to run again
 
                 } else {
-
-                    Theater.Seat bestSeat = theater.bestAvailableSeat();
 
                     // Book the best seat
                     bestSeat.setBXID(BXID);
                     bestSeat.setCID(currentCustomer);
 
                     // Mark it as taken
-                    Theater.seatMap.add(bestSeat.getRowNum() * theater.getSeatsInRow() + bestSeat.getSeatNum(), bestSeat);
+                    Theater.seatMap.set(bestSeat.getRowNum() * theater.getSeatsInRow() + bestSeat.getSeatNum(), bestSeat);
 
                     if (BookingClient.DEBUG) {
-                        System.out.println("Seat Added: " + BXID + ":" + currentCustomer + " - " + bestSeat.toString());
+                        System.out.println("-\tSeat Added: " + BXID + ":" + currentCustomer + " - " + bestSeat.toString());
                     }
-
+                }
+            }
                     // Let other threads have a turn --> synchronize on seatMap or syncLog?
+                    // TODO: figure out how to force the thread to give up its key here, and return at a later time to the same place
                     try {
                         Thread.yield();
+                        Thread.sleep(8); // Try to give Threads that have not yielded yet priority
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }
+                //} // close else
 
-            }
+            //} // close synchronized()
         }
     }
 
     public void start() {
 
         if (BookingClient.DEBUG) {
-            System.out.println("Thread started for: " + BXID);
+            System.out.println("==> STARTED " + BXID + " <==");
         }
 
         // Start the custom Thread using an underlying Thread object

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Theater {
 
@@ -244,6 +245,7 @@ public class Theater {
         this.nowShowing = show;
 
         if (BookingClient.DEBUG) {
+            System.out.println("+================SETUP==================+");
             System.out.println("Created Theater with rows:" + rowsInside + " seats:" + seatsInRow);
         }
 
@@ -273,11 +275,15 @@ public class Theater {
                         add(currentSeat);
 
                         if (BookingClient.DEBUG) {
-                            System.out.println("Created Seat at: r:" + row + " c:" + sn);
+                            System.out.println("-\tCreated Seat at: r:" + row + " c:" + sn);
                         }
                     }
             }
         };
+
+        if (BookingClient.DEBUG) {
+            System.out.println("+============END SETUP==================+\n");
+        }
 
     }
 
@@ -299,7 +305,7 @@ public class Theater {
                 // if the current seat is available, return it
                 if (currentSeat.getBXID().equals("UNASSIGNED")) { // TODO: is this the best structure? --> can we iterate through the seats in order?
                     if (BookingClient.DEBUG) {
-                        System.out.println("Available Seat at: r:" + row + " c:" + sn);
+                        System.out.println("-\tBest Seat r:" + row + " c:" + sn);
                     }
 
                     return currentSeat;
@@ -372,5 +378,15 @@ public class Theater {
         }
 
         return ticketLog;
+    }
+
+    /**
+     * toString override for Theater objects for easier debugging
+     */
+    public static String theaterString(){
+
+        String out = seatMap.stream().map(Object::toString).collect(Collectors.joining(","));
+
+        return out;
     }
 }

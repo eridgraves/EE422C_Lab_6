@@ -20,20 +20,6 @@ public class testSeatMap {
             assertEquals("UNASSIGNED", s.getBXID());
         }
 
-        // Make sure that they are all initialized properly
-//        for(Map.Entry<String, String> seat : Theater.seatMap.entrySet()){
-//
-//            // All seats should be unassigned
-//            assertEquals("UNASSIGNED", seat.getValue());
-//
-//            // Print map values if DEBUG
-//            if(BookingClient.DEBUG){
-//                System.out.println(seat.getKey() + ":" + seat.getValue());
-//            }
-//        }
-
-
-
 
     }
 
