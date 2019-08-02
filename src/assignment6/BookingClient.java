@@ -82,7 +82,7 @@ public class BookingClient {
                 put("BX2", 2);
                 put("BX3", 3);
                 put("BX4", 4);
-                put("BX5", 5); // 15 total clients
+                put("BX5", 7); // 17 total clients
             }
         };
 
@@ -93,6 +93,30 @@ public class BookingClient {
         BookingClient bClient = new BookingClient(officeMap, th);
 
         List<Thread> tList = bClient.simulate();
+
+        // Join all Threads before printing log?
+        for(Thread t : tList ){
+            try {
+                t.join();
+
+//                for(Theater.Ticket tkt : th.getTransactionLog()){
+//                    System.out.println(tkt.toString());
+//                }
+//                System.out.println("+++++++++++++++++++++++++++++++++++");
+
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Print the Transaction Log: should work at any time, but try and make all threads join beforehand
+        //System.out.println(th.getTransactionLog().toArray().toString()); // concurrent modification exception : prints while Threads are still writing to it
+
+//        for(Theater.Ticket t : th.getTransactionLog()){
+//            System.out.println(t.toString());
+//        }
+
 
         if(DEBUG){
             //System.out.println(tList);

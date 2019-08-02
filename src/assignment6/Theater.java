@@ -22,7 +22,7 @@ public class Theater {
     public String nowShowing; // Name of the movie
 
     // Create a map to hold all the seats in the Theater, if they have been sold, BXID, and CustID
-    public static ArrayList<Seat> seatMap; //TODO: should this be static?
+    public static ArrayList<Seat> seatMap; //TODO: should this be final?
 
 
     // Create a FIFO data structure to use as a log of transactions
@@ -325,7 +325,7 @@ public class Theater {
      */
     public Ticket printTicket(String boxOfficeId, Seat seat, int client) {
 
-        // Search all seats in the Theater
+        // Search all seats in the Theater seat map
         for (Seat s : seatMap) {
             if (s.getSeatNum() == seat.getSeatNum() && s.getRowNum() == seat.getRowNum() && s.getBXID().equals(boxOfficeId) && s.getCID() == client) {
 
@@ -349,6 +349,7 @@ public class Theater {
             }
         }
 
+        // Return null if there is no ticket from this BX
         return null;
     }
 
@@ -365,9 +366,9 @@ public class Theater {
         // for each sold seat
         for (Seat s : syncLog) {
 
-            if(BookingClient.DEBUG) {
-                System.out.println(s.toString());
-            }
+//            if(BookingClient.DEBUG) {
+//                System.out.println(s.toString());
+//            }
 
             // Get the ticket from that seat
             Ticket tkt = new Ticket(nowShowing, s.getBXID(), s, s.getCID());

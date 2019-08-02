@@ -3,6 +3,8 @@ package assignment6;
 import java.util.ArrayList;
 import java.util.List;
 
+import static assignment6.Theater.syncLog;
+
 public class clientThread extends Thread {
 
     Thread cThread;
@@ -56,6 +58,16 @@ public class clientThread extends Thread {
 
                     // Mark it as taken
                     Theater.seatMap.set(bestSeat.getRowNum() * theater.getSeatsInRow() + bestSeat.getSeatNum(), bestSeat);
+
+
+                    // Add the ticket to the log
+                    syncLog.add(bestSeat);
+                    if (BookingClient.DEBUG) {
+                        System.out.println("-\tSync Log: " + syncLog.toString());
+                    }
+
+                    // Print the ticket
+                    theater.printTicket(bestSeat.getBXID(), bestSeat, currentCustomer);
 
                     if (BookingClient.DEBUG) {
                         System.out.println("-\tSeat Added: " + BXID + ":" + currentCustomer + " - " + bestSeat.toString());
