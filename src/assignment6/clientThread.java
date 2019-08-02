@@ -35,7 +35,7 @@ public class clientThread extends Thread {
         // While there are still people in line
         for (int currentCustomer = 1; currentCustomer <= numCustomers; currentCustomer++) {
 
-            synchronized (Theater.seatMap) { // TODO: need to restructure on one synchronized structure
+            synchronized (Theater.seatMap) {
                 if (BookingClient.DEBUG) {
                     System.out.println(BXID + ": (" + currentCustomer + "/" + numCustomers + ")");
                 }
@@ -61,7 +61,9 @@ public class clientThread extends Thread {
 
 
                     // Add the ticket to the log
-                    syncLog.add(bestSeat);
+                    //synchronized (syncLog) {
+                        syncLog.add(bestSeat); // TODO: synchronize this with getTransactionLog()
+                    //}
                     if (BookingClient.DEBUG) {
                         System.out.println("-\tSync Log: " + syncLog.toString());
                     }

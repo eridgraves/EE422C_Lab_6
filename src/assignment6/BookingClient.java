@@ -17,7 +17,7 @@ import java.lang.Thread;
 
 public class BookingClient {
 
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
     public static boolean DEBUG_VERBOSE = false; // only if you want to see every possible debug message
 
     public static Theater theater;
@@ -82,7 +82,7 @@ public class BookingClient {
                 put("BX2", 2);
                 put("BX3", 3);
                 put("BX4", 4);
-                put("BX5", 7); // 17 total clients
+                put("BX5", 7); // 15 total clients
             }
         };
 
@@ -95,23 +95,22 @@ public class BookingClient {
         List<Thread> tList = bClient.simulate();
 
         // Join all Threads before printing log?
+//        System.out.println(Thread.activeCount());
         for(Thread t : tList ){
             try {
-                t.join();
-
-//                for(Theater.Ticket tkt : th.getTransactionLog()){
-//                    System.out.println(tkt.toString());
-//                }
-//                System.out.println("+++++++++++++++++++++++++++++++++++");
-
+                t.join(); //TODO: write test code for join(), to try this out
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
+        System.out.println(Thread.activeCount());
+//        Theater.Seat best = th.bestAvailableSeat();
+//        System.out.println(best.toString());
+
         // Print the Transaction Log: should work at any time, but try and make all threads join beforehand
-        //System.out.println(th.getTransactionLog().toArray().toString()); // concurrent modification exception : prints while Threads are still writing to it
+        System.out.println("\n\nPRINTING TRANSACTION LOG:" + th.getTransactionLog().toString()); // concurrent modification exception : prints while Threads are still writing to it
 
 //        for(Theater.Ticket t : th.getTransactionLog()){
 //            System.out.println(t.toString());

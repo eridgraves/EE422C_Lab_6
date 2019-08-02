@@ -96,7 +96,7 @@ public class Theater {
                 result = ((char) ('A' + tempRowNumber % 26)) + result;
                 tempRowNumber = tempRowNumber / 26;
             } while (tempRowNumber > 0);
-            result += seatNum;
+            result += seatNum + 1; //TODO: ADDED 1 HERE?
             return result;
         }
 
@@ -188,7 +188,7 @@ public class Theater {
         }
 
         @Override
-        public String toString() {
+        public String toString() { // Change so that all seat numbers add 1 (Since my code starts at seat 0)
             String result, dashLine, showLine, boxLine, seatLine, clientLine, eol;
 
             eol = System.getProperty("line.separator");
@@ -274,7 +274,7 @@ public class Theater {
                         // Add Seat to the seatMap
                         add(currentSeat);
 
-                        if (BookingClient.DEBUG) {
+                        if (BookingClient.DEBUG_VERBOSE) {
                             System.out.println("-\tCreated Seat at: r:" + row + " c:" + sn);
                         }
                     }
@@ -295,10 +295,10 @@ public class Theater {
     public Seat bestAvailableSeat() {
 
         // For each row starting from the front
-        for (int row = 0; row < rowsInside; row++) { // TODO: rows start at 0?
+        for (int row = 0; row < rowsInside; row++) {
 
             // For each seat starting from the left (0)
-            for (int sn = 0; sn < seatsInRow; sn++) {  // TODO: seats start at 0?
+            for (int sn = 0; sn < seatsInRow; sn++) {
 
                 Seat currentSeat = seatMap.get(row * seatsInRow + sn); // check this math
 
@@ -325,6 +325,15 @@ public class Theater {
      */
     public Ticket printTicket(String boxOfficeId, Seat seat, int client) {
 
+        // Small delay (using printDelay)
+        //-- something with Thread.sleep(printDelay)
+        try {
+            Thread.sleep(getPrintDelay());
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         // Search all seats in the Theater seat map
         for (Seat s : seatMap) {
             if (s.getSeatNum() == seat.getSeatNum() && s.getRowNum() == seat.getRowNum() && s.getBXID().equals(boxOfficeId) && s.getCID() == client) {
@@ -334,15 +343,6 @@ public class Theater {
 
                 // Print Ticket to console
                 System.out.println(tkt.toString());
-
-                // Small delay (using printDelay)
-                //-- something with Thread.sleep(printDelay)
-                try {
-                    Thread.sleep(getPrintDelay());
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
 
                 // Return the Ticket
                 return tkt;
@@ -358,36 +358,45 @@ public class Theater {
      *
      * @return list of tickets sold
      */
-    public List<Ticket> getTransactionLog() {
+    public List<Ticket> getTransactionLog() { // TODO: synchronize this with writing to syncLog
+
+        // Sleep to make sure that the log finishes building before it prints
+        try{
+            Thread.sleep(10 + /*BookingClient.boMap.size()*/ seatMap.size() * (15 + getPrintDelay()));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // Make an empty list for tickets
         List<Ticket> ticketLog = new LinkedList<>();
 
-        // for each sold seat
-        for (Seat s : syncLog) {
+        //synchronized(syncLog) { //TODO figure out what this is doing
+            // for each sold seat
+            for (Seat s : syncLog) {
 
 //            if(BookingClient.DEBUG) {
 //                System.out.println(s.toString());
 //            }
 
-            // Get the ticket from that seat
-            Ticket tkt = new Ticket(nowShowing, s.getBXID(), s, s.getCID());
+                // Get the ticket from that seat
+                Ticket tkt = new Ticket(nowShowing, s.getBXID(), s, s.getCID());
 
-            // Add it to the list
-            ticketLog.add(tkt);
+                // Add it to the list
+                ticketLog.add(tkt);
 
-        }
+            }
+        //}
 
         return ticketLog;
     }
 
-    /**
-     * toString override for Theater objects for easier debugging
-     */
-    public static String theaterString(){
-
-        String out = seatMap.stream().map(Object::toString).collect(Collectors.joining(","));
-
-        return out;
-    }
+//    /**
+//     * toString override for Theater objects for easier debugging
+//     */
+//    public static String theaterString(){
+//
+//        String out = seatMap.stream().map(Object::toString).collect(Collectors.joining(","));
+//
+//        return out;
+//    }
 }
