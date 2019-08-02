@@ -294,26 +294,28 @@ public class Theater {
      */
     public Seat bestAvailableSeat() {
 
-        // For each row starting from the front
-        for (int row = 0; row < rowsInside; row++) {
+        synchronized (seatMap) {
+            // For each row starting from the front
+            for (int row = 0; row < rowsInside; row++) {
 
-            // For each seat starting from the left (0)
-            for (int sn = 0; sn < seatsInRow; sn++) {
+                // For each seat starting from the left (0)
+                for (int sn = 0; sn < seatsInRow; sn++) {
 
-                Seat currentSeat = seatMap.get(row * seatsInRow + sn); // check this math
+                    Seat currentSeat = seatMap.get(row * seatsInRow + sn); // check this math
 
-                // if the current seat is available, return it
-                if (currentSeat.getBXID().equals("UNASSIGNED")) { // TODO: is this the best structure? --> can we iterate through the seats in order?
-                    if (BookingClient.DEBUG) {
-                        System.out.println("-\tBest Seat r:" + row + " c:" + sn);
+                    // if the current seat is available, return it
+                    if (currentSeat.getBXID().equals("UNASSIGNED")) { // TODO: is this the best structure? --> can we iterate through the seats in order?
+                        if (BookingClient.DEBUG) {
+                            System.out.println("-\tBest Seat r:" + row + " c:" + sn);
+                        }
+
+                        return currentSeat;
                     }
-
-                    return currentSeat;
                 }
             }
-        }
 
-        return null;
+            return null;
+        }
     }
 
     /**

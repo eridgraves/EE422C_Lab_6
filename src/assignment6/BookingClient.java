@@ -60,7 +60,38 @@ public class BookingClient {
             // Start the Thread
             t.start();
 
+//            try {
+//                t.yield();
+//                t.join();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+
+
+            // This is here to delay the thread until other threads come in, since I couldnt get join() to work properly
+            theater.getTransactionLog().toString();
+
+
+            // TODO: maybe join threads here?
+//            try {
+//                t.join();
+//
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+
         }
+        // TODO: maybe join threads here?
+//        for(Thread th : threadList ){
+//            try {
+//                th.join();
+//
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+
         // Return the list of threads
         return threadList;
     }
@@ -96,16 +127,16 @@ public class BookingClient {
 
         // Join all Threads before printing log?
 //        System.out.println(Thread.activeCount());
-        for(Thread t : tList ){
-            try {
-                t.join(); //TODO: write test code for join(), to try this out
+//        for(Thread t : tList ){
+//            try {
+//                t.join(); //TODO: write test code for join(), to try this out
+//
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        System.out.println(Thread.activeCount());
+//        System.out.println(Thread.activeCount());
 //        Theater.Seat best = th.bestAvailableSeat();
 //        System.out.println(best.toString());
 
