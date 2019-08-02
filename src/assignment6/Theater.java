@@ -47,9 +47,6 @@ public class Theater {
         return seatsInRow;
     }
 
-    // ArrayList of each seat in the theater. Concurrently modified by each BoxOffice thread as tickets are purchased. When full, all seats have been sold.
-    public ArrayList<Ticket> seatTickets = new ArrayList<>(); // TODO : didnt see this at first???
-
     /**
      * Represents a seat in the theater
      * A1, A2, A3, ... B1, B2, B3 ...
@@ -96,7 +93,7 @@ public class Theater {
                 result = ((char) ('A' + tempRowNumber % 26)) + result;
                 tempRowNumber = tempRowNumber / 26;
             } while (tempRowNumber > 0);
-            result += seatNum + 1; //TODO: ADDED 1 HERE?
+            result += seatNum + 1; //TODO: ADDED 1 HERE TO FIX OUTPUT
             return result;
         }
 
@@ -372,33 +369,20 @@ public class Theater {
         // Make an empty list for tickets
         List<Ticket> ticketLog = new LinkedList<>();
 
-        //synchronized(syncLog) { //TODO figure out what this is doing
-            // for each sold seat
-            for (Seat s : syncLog) {
+        // for each sold seat
+        for (Seat s : syncLog) {
 
-//            if(BookingClient.DEBUG) {
-//                System.out.println(s.toString());
-//            }
 
-                // Get the ticket from that seat
-                Ticket tkt = new Ticket(nowShowing, s.getBXID(), s, s.getCID());
+            // Get the ticket from that seat
+            Ticket tkt = new Ticket(nowShowing, s.getBXID(), s, s.getCID());
 
-                // Add it to the list
-                ticketLog.add(tkt);
+            // Add it to the list
+            ticketLog.add(tkt);
 
-            }
-        //}
+        }
+
 
         return ticketLog;
     }
 
-//    /**
-//     * toString override for Theater objects for easier debugging
-//     */
-//    public static String theaterString(){
-//
-//        String out = seatMap.stream().map(Object::toString).collect(Collectors.joining(","));
-//
-//        return out;
-//    }
 }

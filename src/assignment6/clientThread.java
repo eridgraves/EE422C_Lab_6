@@ -26,7 +26,7 @@ public class clientThread extends Thread {
     }
 
     @Override
-    public void run() { //TODO: Change the structure here
+    public void run() {
 
         if (BookingClient.DEBUG && numCustomers < 1) {
             System.out.println(BXID + ": No customers");
@@ -61,9 +61,8 @@ public class clientThread extends Thread {
 
 
                     // Add the ticket to the log
-                    //synchronized (syncLog) {
-                        syncLog.add(bestSeat); // TODO: synchronize this with getTransactionLog()
-                    //}
+                    syncLog.add(bestSeat); // TODO: synchronize this with getTransactionLog()
+
                     if (BookingClient.DEBUG) {
                         System.out.println("-\tSync Log: " + syncLog.toString());
                     }
@@ -76,17 +75,15 @@ public class clientThread extends Thread {
                     }
                 }
             }
-                    // Let other threads have a turn --> synchronize on seatMap or syncLog?
-                    // TODO: figure out how to force the thread to give up its key here, and return at a later time to the same place
-                    try {
-                        Thread.yield();
-                        Thread.sleep(8); // Try to give Threads that have not yielded yet priority
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                //} // close else
+            // Let other threads have a turn --> synchronize on seatMap or syncLog?
+            // TODO: figure out how to force the thread to give up its key here, and return at a later time to the same place
+            try {
+                Thread.yield();
+                Thread.sleep(8); // Try to give Threads that have not yielded yet priority
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-            //} // close synchronized()
         }
     }
 

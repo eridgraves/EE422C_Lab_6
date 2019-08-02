@@ -30,7 +30,6 @@ public class BookingClient {
      */
     public BookingClient(Map<String, Integer> office, Theater th) {
 
-        //TODO: what goes here? Does it need a private copy of the map to be used during simulate()?
         boMap = new HashMap<String, Integer>(office);
 
         theater = th;
@@ -61,7 +60,6 @@ public class BookingClient {
             t.start();
 
 //            try {
-//                t.yield();
 //                t.join();
 //            } catch (InterruptedException e) {
 //                e.printStackTrace();
@@ -71,26 +69,7 @@ public class BookingClient {
             // This is here to delay the thread until other threads come in, since I couldnt get join() to work properly
             theater.getTransactionLog().toString();
 
-
-            // TODO: maybe join threads here?
-//            try {
-//                t.join();
-//
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-
         }
-        // TODO: maybe join threads here?
-//        for(Thread th : threadList ){
-//            try {
-//                th.join();
-//
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-
 
         // Return the list of threads
         return threadList;
@@ -99,11 +78,6 @@ public class BookingClient {
     // Break points suspend on Thread (rather than on all)
 
     public static void main(String[] args) {
-        // TODO: Initialize test data to description
-        // Plan:
-        // 1) Make the bookings work with only one thread (box office)
-        // 2) Add multithreading
-
 
         // Make a Map of Box Offices and people in line
         Map<String, Integer> officeMap = new HashMap<String, Integer>(6){
@@ -117,7 +91,7 @@ public class BookingClient {
             }
         };
 
-        // Make a Theater
+        // Make a Theater: Set number of rows and seats here
         Theater th = new Theater(4,4,"SHOW_NAME"); // 16 seats
 
         // Create a new BookingClient Object
@@ -126,33 +100,18 @@ public class BookingClient {
         List<Thread> tList = bClient.simulate();
 
         // Join all Threads before printing log?
-//        System.out.println(Thread.activeCount());
-//        for(Thread t : tList ){
-//            try {
-//                t.join(); //TODO: write test code for join(), to try this out
-//
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
+        for(Thread t : tList ){
+            try {
+                t.join();  //TODO: not working as expected?
 
-//        System.out.println(Thread.activeCount());
-//        Theater.Seat best = th.bestAvailableSeat();
-//        System.out.println(best.toString());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
 
         // Print the Transaction Log: should work at any time, but try and make all threads join beforehand
         System.out.println("\n\nPRINTING TRANSACTION LOG:" + th.getTransactionLog().toString()); // concurrent modification exception : prints while Threads are still writing to it
-
-//        for(Theater.Ticket t : th.getTransactionLog()){
-//            System.out.println(t.toString());
-//        }
-
-
-        if(DEBUG){
-            //System.out.println(tList);
-            //System.out.println(bClient.theater.theaterString());
-        }
-
 
     }
 }
